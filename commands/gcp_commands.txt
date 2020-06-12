@@ -1,0 +1,51 @@
+# Create VM to run docker containers (Google's Container-Optimized OS): 
+gcloud beta compute --project=sincere-bongo-264115 instances create instance-1 --zone=southamerica-east1-a --machine-type=n1-standard-1 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=529567592639-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=cos-69-10895-385-0 --image-project=cos-cloud --boot-disk-size=10GB --boot-disk-type=pd-standard --boot-disk-device-name=instance-1 --reservation-affinity=any
+
+# docker-compose container alias: (https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os) 
+echo alias docker-compose="'"'docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v "$PWD:$PWD" \
+    -w="$PWD" \
+    docker/compose:1.24.0'"'" >> ~/.bashrc
+
+# Reload bash config:
+source ~/.bashrc
+
+# Configure GCP commands:
+toolbox
+
+# Copy bucket file:
+mkdir /home/caiosgon3/bucket-folder
+toolbox --bind=/home/caiosgon3/bucket-folder:/my-bucket <<< "gsutil cp -r gs://teste-caio/movie_ratings/generate_ratings/ /my-bucket"
+cp /home/caiosgon3/bucket-folder/generate_ratings/artificial_ratings.csv /home/caiosgon3/MovieRatings/generate_ratings/
+
+
+# Playground cluster (for Zeppelin Access):
+gcloud beta dataproc clusters create playground-cluster --enable-component-gateway --region southamerica-east1 --subnet default --zone southamerica-east1-a --single-node --master-machine-type n1-standard-2 --master-boot-disk-size 100 --worker-boot-disk-size 100 --image-version 1.4-debian9 --optional-components ZEPPELIN --project sincere-bongo-264115 --bucket staging.sincere-bongo-264115.appspot.com
+
+# SET Zeppelin spark_submit_packages:
+/usr/lib/zeppelin/conf/zeppelin-env.sh
+export SPARK_SUBMIT_OPTIONS="--packages io.delta:delta-core_2.11:0.5.0"
+export SPARK_SUBMIT_OPTIONS="--packages io.delta:delta-core_2.11:0.5.0,org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4"
+
+echo export SPARK_SUBMIT_OPTIONS=\"--packages io.delta:delta-core_2.11:0.5.0,org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4\" >> /usr/lib/zeppelin/conf/zeppelin-env.sh
+
+
+
+# Streaming cluster (for consume KafkaTopics):
+gcloud beta dataproc clusters create streaming-cluster --enable-component-gateway --region southamerica-east1 --subnet default --zone southamerica-east1-a --single-node --master-machine-type n1-standard-1 --master-boot-disk-size 100 --worker-boot-disk-size 100 --image-version 1.4-debian9 --optional-components ZEPPELIN --project sincere-bongo-264115 --bucket staging.sincere-bongo-264115.appspot.com
+
+# Submit Spark Job to consume KafkaTopics:
+gcloud beta dataproc jobs submit pyspark \
+    --cluster streaming-cluster --region southamerica-east1 \
+    --properties ^#^spark.jars.packages=io.delta:delta-core_2.11:0.5.0,org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 \
+    gs://teste-caio/movie_ratings/jobs/kafka_ingestion.py
+
+
+Internal DNS:
+    [INSTANCE_NAME].[ZONE].c.[PROJECT_ID].internal
+    terraform-instance.southamerica-east1-b.c.sincere-bongo-264115.internal
+
+
+gcloud beta dataproc clusters create playground-cluster --enable-component-gateway --region southamerica-east1 --subnet default --single-node --master-machine-type n1-standard-2 --master-boot-disk-size 100 --image-version 1.4-debian9 --optional-components ZEPPELIN --project sincere-bongo-264115 --bucket staging.sincere-bongo-264115.appspot.com
+
