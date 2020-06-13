@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  zookeeper:
+    container_name: "zookeeper"
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+      
+  kafka:
+    container_name: "kafka"
+    image: 'wurstmeister/kafka:latest'
+    ports:
+      - '9092:9092'
+      - '9094:9094'
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://terraform-instance.southamerica-east1-b.c.sincere-bongo-264115.internal:9094
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CREATE_TOPICS: "tweets:1:1"
+    depends_on:
+        - zookeeper
+
+
+# docker build . --tag=tweets-stream:latest
+  tweets-stream:
+    container_name: "tweets-stream"
+    # image: tweets-stream:latest
+    build: ./0_tweets_stream/
+    depends_on: 
+      - kafka
+    environment:
+      TWITTER_CONSUMER_KEY: 
+      TWITTER_CONSUMER_SECRET: 
+      TWITTER_ACCESS_TOKEN: 
+      TWITTER_ACCESS_SECRET: 

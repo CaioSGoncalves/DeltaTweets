@@ -11,7 +11,7 @@ import config
 from kafka_utils import connect_kafka_producer, publish_message
 
 
-# kafka_producer = connect_kafka_producer()
+kafka_producer = connect_kafka_producer()
 
 
 class GetDataTwitter(StreamListener):
@@ -22,17 +22,20 @@ class GetDataTwitter(StreamListener):
         formated_data["id"] = all_data["id"]
         formated_data["text"] = all_data["text"]
         formated_data["username"] = all_data["user"]["screen_name"]
-        formated_data["created_at"] = all_data["created_at"]
+
+        formated_created_at = all_data["created_at"][:19] + all_data["created_at"][-5:]
+        formated_data["created_at"] = int(datetime.strptime(formated_created_at, '%a %b %d %H:%M:%S %Y').timestamp())
         # 'quote_count' 'reply_count' 'retweet_count' 'favorite_count'
 
         formated_data["hashtags"] = [h["text"] for h in all_data["entities"]["hashtags"]]
         formated_data["links"] = self.extract_links(formated_data["text"])
-        formated_data["extract_datetime"] = datetime.now()
+        formated_data["extracted_at"] = int(datetime.now().timestamp())
 
         print(formated_data["id"], formated_data["created_at"], formated_data["username"], formated_data["text"],
-              formated_data["links"], formated_data["extract_datetime"], formated_data["hashtags"])
+              formated_data["links"], formated_data["extracted_at"], formated_data["hashtags"])
 
-        # publish_message(kafka_producer, 'tweets', "", str(formated_data))
+        message = json.dumps(formated_data)
+        publish_message(kafka_producer, "tweets", message)
 
         return True
 
