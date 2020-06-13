@@ -2,6 +2,7 @@ from typing import List
 import json
 import re
 from datetime import datetime
+import time
 
 from tweepy import Stream
 from tweepy import OAuthHandler
@@ -48,6 +49,8 @@ class GetDataTwitter(StreamListener):
 
 
 if __name__ == '__main__':
+    time.sleep(20)
+
     auth = OAuthHandler(config.consumer_key, config.consumer_secret)
     auth.set_access_token(config.access_token, config.access_secret)
 

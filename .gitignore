@@ -2,3 +2,5 @@ key_file.json
 0_tweets_stream/.idea/
 0_tweets_stream/venv/
 *.pyc
+terraform/.terraform/
+terraform/terraform.*
