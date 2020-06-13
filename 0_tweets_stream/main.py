@@ -12,10 +12,9 @@ import config
 from kafka_utils import connect_kafka_producer, publish_message
 
 
-kafka_producer = connect_kafka_producer()
-
-
 class GetDataTwitter(StreamListener):
+    kafka_producer = connect_kafka_producer()
+
     def on_data(self, data):
         formated_data = dict()
 
@@ -36,7 +35,7 @@ class GetDataTwitter(StreamListener):
               formated_data["links"], formated_data["extracted_at"], formated_data["hashtags"])
 
         message = json.dumps(formated_data)
-        publish_message(kafka_producer, "tweets", message)
+        publish_message(self.kafka_producer, "tweets", message)
 
         return True
 
@@ -49,7 +48,7 @@ class GetDataTwitter(StreamListener):
 
 
 if __name__ == '__main__':
-    time.sleep(20)
+    time.sleep(30)
 
     auth = OAuthHandler(config.consumer_key, config.consumer_secret)
     auth.set_access_token(config.access_token, config.access_secret)

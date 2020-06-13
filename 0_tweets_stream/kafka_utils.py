@@ -23,5 +23,7 @@ def connect_kafka_producer():
     except Exception as ex:
         print('Exception while connecting Kafka')
         print(str(ex))
-    finally:
-        return _producer
+        time.sleep(10)
+        return connect_kafka_producer()
+
+    return _producer
