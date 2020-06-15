@@ -106,44 +106,45 @@ resource "google_storage_bucket_object" "zeppelin_init" {
   
 # }
 
-# resource "google_dataproc_cluster" "playground-cluster" {
-#   provider = "google-beta"
-#   name   = "playground-cluster"
-#   region = "southamerica-east1"
+resource "google_dataproc_cluster" "playground-cluster" {
+  provider = "google-beta"
+  name   = "playground-cluster"
+  region = "southamerica-east1"
 
-#   cluster_config {
-#     staging_bucket = "staging.sincere-bongo-264115.appspot.com"
+  cluster_config {
+    staging_bucket = "staging.sincere-bongo-264115.appspot.com"
 
-#     master_config {
-#         num_instances = 1
-#         machine_type  = "n1-standard-2"
-#         disk_config {
-#           boot_disk_type    = "pd-standard"
-#           boot_disk_size_gb = 100
-#         }
-#     }
+    master_config {
+        num_instances = 1
+        machine_type  = "n1-standard-2"
+        disk_config {
+          boot_disk_type    = "pd-standard"
+          boot_disk_size_gb = 100
+        }
+    }
 
-#     software_config {
-#       image_version = "1.4-debian9"
-#       override_properties = {
-#         "dataproc:dataproc.allow.zero.workers" = "true"
-#       }
-#       optional_components = [ "ZEPPELIN" ]
-#     }
+    software_config {
+      # 1.4 (Debian 9, Hadoop 2.9, Spark 2.4)
+      image_version = "1.4-debian9"
+      override_properties = {
+        "dataproc:dataproc.allow.zero.workers" = "true"
+      }
+      optional_components = [ "ZEPPELIN" ]
+    }
 
-#     endpoint_config {
-#       enable_http_port_access = "true"
-#     }
+    endpoint_config {
+      enable_http_port_access = "true"
+    }
 
-#     initialization_action {
-#         script      = "gs://teste-caio/delta_tweets/zeppelin_init.sh"
-#         timeout_sec = 500
-#     }
+    initialization_action {
+        script      = "gs://teste-caio/delta_tweets/zeppelin_init.sh"
+        timeout_sec = 500
+    }
 
-#   }
+  }
 
-#   depends_on = [
-#     google_storage_bucket_object.zeppelin_init,
-#   ]
+  depends_on = [
+    google_storage_bucket_object.zeppelin_init,
+  ]
 
-# }
+}

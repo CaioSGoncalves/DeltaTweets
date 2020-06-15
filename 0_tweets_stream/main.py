@@ -31,10 +31,8 @@ class GetDataTwitter(StreamListener):
         formated_data["links"] = self.extract_links(formated_data["text"])
         formated_data["extracted_at"] = int(datetime.now().timestamp())
 
-        print(formated_data["id"], formated_data["created_at"], formated_data["username"], formated_data["text"],
-              formated_data["links"], formated_data["extracted_at"], formated_data["hashtags"])
-
         message = json.dumps(formated_data)
+        print(message)
         publish_message(self.kafka_producer, "tweets", message)
 
         return True
